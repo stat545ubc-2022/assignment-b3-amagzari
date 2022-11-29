@@ -1,0 +1,11 @@
+name: stockmarketdashboard
+title:
+username:
+account: amagzari
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7756496
+bundleId: 6565930
+url: https://amagzari.shinyapps.io/stockmarketdashboard/
+when: 1669698074.69731
+lastSyncTime: 1669698074.69732
