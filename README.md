@@ -12,6 +12,7 @@ Option B - My own Shiny app.
 <br>
 <br>
 - A description of my app:  
+<br>
 This application queries the user to enter a stock symbol (AAPL, MSFT, ...) and 
 a desired start date. 
 <br>
