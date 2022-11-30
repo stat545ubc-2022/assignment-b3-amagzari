@@ -9,10 +9,14 @@
 
 # Load necessary libraries
 library(shiny)
+library(shinythemes)
+library(dplyr)
 library(quantmod)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+  
+  theme = shinytheme("darkly"),
 
     # Application title
     titlePanel(
@@ -23,31 +27,39 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
           
-            # Ask user to inter stock symbol
-            textInput("symbolInput", "Insert the stock symbol*"),
+            # Ask user to enter stock symbol
+            textInput("symbolInput", "Insert the stock symbol*", "MSFT"),
             
-            # Ask user to inter desired start date
-            textInput("start", "Insert the start date: YYYY-MM-DD"),
+            # Ask user to enter desired start date
+            textInput("start", "Insert the start date: YYYY-MM-DD",
+                      "2020-01-10"),
+            
+            # Ask user to enter desired end date
+            textInput("end", "Insert the end date: YYYY-MM-DD",
+                      Sys.Date()),
             
             # Add reactivity button
             actionButton("button", "APPLY", class = "btn-block"),
             
             # Commentary text and formatting
-            HTML("<br/>"),
-            "Once your table is generated, you may download it 
-            by clicking on the button below.",
-            HTML("<br/>"),
+            HTML("<br/> <br/>"),
             
-            # Add data file download button
-            downloadButton("downloadButton", "Download"),
-            
-            # Commentary text and formatting
-            HTML("<br/>"),
-            HTML("<br/>"),
             HTML("<em>*A stock symbol is an arrangement of 
                  characters—usually letters—representing publicly-traded 
-                 securities on an exchange. Exemples are: AAPL, MSFT, 
-                 GOOGL, META.</em>")
+                 securities on an exchange. Examples are: AAPL, MSFT, 
+                 GOOGL, META, BAC, AMZN, T, MO.</em>"),
+            
+            HTML("<br/>"),
+            
+            "You can click on the link below for a list of accepted symbols,
+            but please keep in mind that some symbols may still introduce 
+            an error if they are not longer covered by Yahoo.",
+            HTML("<br/>"),
+            
+            # Link for list of accepted symbols
+            actionLink("SymbolsLink", "List of symbols", 
+                       onclick ="window.open('https://docs.google.com/spreadsheets/d/1CnhCH7wH11uqlQTql3ehEXIcxnaUe008/edit?usp=sharing&ouid=116336507958196703721&rtpof=true&sd=true',
+                       '_blank')")
     ),
 
         mainPanel(
@@ -59,11 +71,46 @@ ui <- fluidPage(
             
             # First tab displays data table
             tabPanel("Table", 
+                     # Commentary text and formatting
+                     HTML("<br/>"),
+                     "Once your table is generated, you may download it by clicking on the button below.",
+                     HTML("<br/>"),
+                     
+                     # Add data file download button
+                     downloadButton("downloadButton", "Download"),
                      tableOutput("data")),
             
             # Second tab displays data chart
             tabPanel("Chart", 
-                     plotOutput("chart"))
+                     plotOutput("chart")),
+            
+            # Third tab displays table filtered by volume range
+            tabPanel("Volume Table",
+                     
+                     "In trading, volume refers to the number of shares traded in a stock.",
+                     HTML("<br/> <br/>"),
+                     
+                     "The minimum number of traded shares in the selected period is:",
+                     textOutput("minVol"),
+                     HTML("<br/>"),
+                     
+                     "The maximum number of traded shares in the selected period is:",
+                     textOutput("maxVol"),
+                     HTML("<br/>"),
+                     
+                     HTML("<strong> Select the volume range for which you would like to generate a table:</strong>"),
+                     HTML("<br/> <br/>"),
+                     
+                     # Ask user to enter desired minimum Volume
+                     textInput("minVolume", "Minimum Volume"),
+                     
+                     # Ask user to enter desired maximum Volume
+                     textInput("maxVolume", "Maximum Volume"),
+                     
+                     # Add reactivity button to filter data and generate filtered table
+                     actionButton("filter", "FILTER", class = "btn-block"),
+                     tableOutput("volumeTable")
+                     )
           )
       
         )
@@ -76,7 +123,7 @@ server <- function(input, output) {
   # Get the xts object for the desired stock and time period
   symbol <- eventReactive(input$button, {
     getSymbols(input$symbolInput, src = "yahoo", from = input$start, 
-               to = Sys.Date() + 1, auto.assign = FALSE)
+               to = as.Date(input$end) + 1, auto.assign = FALSE)
   })
   
   # Convert the xts object into a data frame
@@ -106,10 +153,34 @@ server <- function(input, output) {
       write.csv(symbol_converted(), file)
     })
   
-  # render standard financial chart of desired stock and time period
+  # Render standard financial chart of desired stock and time period
   output$chart <- renderPlot({
     chartSeries(symbol())
   })
+  
+  # Renders minimum volume for the selected period
+  output$minVol <- renderText({
+    min(symbol_converted()$Volume)
+  })
+  
+  # renders maximum volume for the selected period
+  output$maxVol <- renderText({
+    max(symbol_converted()$Volume)
+  })
+  
+  # Filters data by desired volume range
+  volumeData <- eventReactive(input$filter, {
+    table <- symbol_converted() %>% filter(Volume > input$minVolume &
+                                             Volume < input$maxVolume)
+    
+    table
+  })
+  
+  # Renders filtered table
+  output$volumeTable <- renderTable({
+    volumeData()
+  })
+  
 }
 
 # Run the application 
