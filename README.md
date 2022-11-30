@@ -1,13 +1,12 @@
----
-output:
-  pdf_document: default
-  html_document: default
----
 # README
 
 The **app.R** file contains the code used to improve the Shiny app completed in assignment B-3. The improved application is fully-functioning and deployed. Its URL is shown below:  
 
-https://amagzari.shinyapps.io/StockMarketBoard/?_ga=2.59447022.231963512.1669697863-1263216897.1669464076  
+https://amagzari.shinyapps.io/StockMarketBoard/  
+
+The initial version app URL is:  
+
+https://amagzari.shinyapps.io/stockmarketdashboard/
 
 ## Description and instructions
 
